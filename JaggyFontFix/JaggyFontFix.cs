@@ -16,7 +16,7 @@ namespace JaggyFontFix
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "xykle";
         public const string PluginName = "JaggyFontFix";
-        public const string PluginVersion = "1.2.0";
+        public const string PluginVersion = "1.2.2";
 
         public static PluginInfo PInfo { get; private set; }
 
@@ -193,12 +193,12 @@ namespace JaggyFontFix
         #region Replace Fonts
         private GameObject ReplaceFontOnStageBegin(On.RoR2.Run.orig_InstantiateUi orig, RoR2.Run self, Transform uiRoot)
         {
-            orig(self, uiRoot);
+            var obj = orig(self, uiRoot);
             var count = ReplaceAllFont();
 
             Log.Info(string.Format("New stage begun, replace {0} font(s) on scene.", count));
 
-            return self.gameObject;
+            return obj;
         }
 
         private void ReplaceTmpControllerFont(On.RoR2.UI.LanguageTextMeshController.orig_CacheComponents orig, RoR2.UI.LanguageTextMeshController self)
