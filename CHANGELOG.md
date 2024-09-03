@@ -1,3 +1,7 @@
+## 1.2.2
+* Fix return null gameobject causes missing UI with Evolution Artifact.
+## 1.2.1
+* Add Github page to `manifest.json`
 ## 1.2.0
 * Change configuration method to build-in function.
 * Change mod default font back to `Noto Sans`
