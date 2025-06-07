@@ -2,9 +2,6 @@ using BepInEx;
 using UnityEngine;
 using TMPro;
 using IO = System.IO;
-using System.Text.RegularExpressions;
-using System;
-using RoR2;
 using BepInEx.Configuration;
 
 namespace JaggyFontFix
@@ -16,11 +13,12 @@ namespace JaggyFontFix
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "xykle";
         public const string PluginName = "JaggyFontFix";
-        public const string PluginVersion = "1.2.2";
+        public const string PluginVersion = "1.3.0";
 
         public static PluginInfo PInfo { get; private set; }
 
         #region Config
+        public static ConfigEntry<bool> KeepEnglishFont { get; set; }
         public static ConfigEntry<UseFontName> UseFontNameConfig { get; set; }
         public static ConfigEntry<string> CustomFontFileNameConfig { get; set; }
         #endregion
@@ -40,6 +38,13 @@ namespace JaggyFontFix
 
         private void ConfigurationInit()
         {
+            KeepEnglishFont = Config.Bind<bool>(
+                "Font Settings",
+                "Keep English Font",
+                    false,
+                "Set original English game font (Bombardier) as primary font."
+            );
+
             UseFontNameConfig = Config.Bind<UseFontName>(
                 "Font Settings",
                 "Font Name",
@@ -93,55 +98,7 @@ namespace JaggyFontFix
         private Font LoadFont(UseFontName fontName)
         {
             Font font = null;
-
-            #region Old Load Font Function
-            /*
-            // Try load font from disk
-            var fontFilePath = IO.Path.Combine(IO.Path.GetDirectoryName(PInfo.Location), fontFileName);
-
-            if (IO.File.Exists(fontFilePath + ".ttf"))
-            {
-                font = FontFromFile(fontFilePath + ".ttf");
-            }
-            else if (IO.File.Exists(fontFilePath + ".otf"))
-            {
-                font = FontFromFile(fontFilePath + ".otf");
-            }
-
-            // If font doesn't exist, try load font from bundle asset.
-            if (font == null)
-            {
-                Log.Info("Font in plugin folder not found, loading from zh_font bundle asset.");
-
-                string fontName = defultFontName;
-                string path = IO.Path.Combine(IO.Path.GetDirectoryName(PInfo.Location), fontConfigFile);
-
-                if (IO.File.Exists(path))
-                {
-                    IO.StreamReader reader = new IO.StreamReader(path);
-                    string _font = reader.ReadLine();
-                    reader.Close();
-                    reader.Dispose();
-                    if (_font != null) fontName = Regex.Replace(_font, @"\r\n?|\n", "");
-                    else Log.Warning("UseFont.txt found, but it's empty. Default font NotoSansCJKsc-Regular will be load.");
-                }
-                else
-                {
-                    Log.Info(path + " not found. Default font NotoSansCJKsc-Regular will be load.");
-                }
-
-                font = FontAssets.mainBundle.LoadAsset<Font>(fontName);
-            }
-
-            // If font name in UseFont.txt is not exist, load "NotoSansCJKsc-Regular".
-            if (font == null)
-            {
-                Log.Warning("Font " + fontFileName + " is not in bundle. Change font to NotoSansCJKsc-Regular.");
-                font = FontAssets.mainBundle.LoadAsset<Font>(defultFontName);
-            }
-            */
-            #endregion
-
+            
             switch (fontName)
             {
                 case UseFontName.TaipeiSans:
