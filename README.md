@@ -16,7 +16,7 @@ But noted that due to dynamic font that generate characters at runtime, you migh
 Now I found out there's a function that can just replace about 90% font assets in game. Sometimes this mod still search for all TMP_Text in the scene (At every stage begin), but (hopelly) this mod won't cause too much performance issue now.
 
 # And what else?
-This mod also provide alt fonts cuz I don't like default font very much. :\\
+This mod also provide alt fonts cuz I don't like default Chinese font very much. :\\
 
 ~~To change font, just modify `UseFont.txt` and change text to font name and you are done.\
 Fonts name is also include in this mod as a text file, make sure type name right to change font.~~
@@ -25,7 +25,8 @@ Now I change configuration method to BepInEx build-in one, if you use [r2modman]
 Note that config file only generated after game launched once.
 
 ## Available fonts list: 
-* Noto Sans (Default game font)
+* Bombardier (Default game font for English)
+* Noto Sans (Default game font for Chinese, Japanese and Korean)
 * [台北黑體／Taipei Sans TC](https://sites.google.com/view/jtfoundry/zh-tw?authuser=0)
 * [俐方體11號／Cubic 11](https://github.com/ACh-K/Cubic-11)
 
@@ -56,3 +57,9 @@ A: Taipei Sans TC and Cubic 11 does NOT support Korean characters, use Noto Sans
 
 **Q: THIS MOD DOES NOT WORK!**\
 A: Please update to v1.1.2, I forget to dependency [HookGenPatcher](https://thunderstore.io/package/RiskofThunder/HookGenPatcher/). \:facepalm\:
+
+**Q: Can I change font size?**\
+A: U can! To change font size, just edit `Font Size Scale` setting in config file. e.g. Set to 1.5 meaning it scaling to 150%, 0.5 meaning scaling to 50%.
+
+**Q: There's still some jaggy fonts on my screen :(**\
+A: If your game font still feel jaggy, you can try to change `Font Sampling Point Size` setting in config file to larger number. But keep in mind setting this number to large might cause missing characters or file size increasing.

@@ -1,3 +1,8 @@
+## 1.3.0
+* Add ability to keep vanilla English font as primary font.
+* Add ability to change font size.
+* Add ability to change font sampling point size.
+* Update dependency plugin version.
 ## 1.2.2
 * Fix return null gameobject causes missing UI with Evolution Artifact.
 ## 1.2.1
