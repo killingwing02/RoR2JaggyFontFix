@@ -3,6 +3,7 @@ using UnityEngine;
 using TMPro;
 using IO = System.IO;
 using BepInEx.Configuration;
+using System.Collections.Generic;
 
 namespace JaggyFontFix
 {
@@ -24,6 +25,7 @@ namespace JaggyFontFix
 
         public static ConfigEntry<int> FontPointSize { get; set; }
         public static ConfigEntry<float> FontSizeScale { get; set; }
+        public static ConfigEntry<float> EnglishFontSizeScale { get; set; }
         #endregion
 
         private TMP_FontAsset fontAsset;
@@ -41,12 +43,6 @@ namespace JaggyFontFix
 
         private void ConfigurationInit()
         {
-            KeepEnglishFont = Config.Bind<bool>(
-                "Font Settings",
-                "Keep English Font",
-                    false,
-                "Set vanilla English font (Bombardier) as primary font."
-                );
             UseFontNameConfig = Config.Bind<UseFontName>(
                 "Font Settings",
                 "Font Name",
@@ -62,6 +58,12 @@ namespace JaggyFontFix
                 "File extension is optional."
                 );
 
+            KeepEnglishFont = Config.Bind<bool>(
+                "Font Settings(Advanced)",
+                "Keep English Font",
+                    false,
+                "Set vanilla English font (Bombardier) as primary font. Might cause inconsistent font sizes."
+                );
             FontPointSize = Config.Bind<int>(
                 "Font Settings(Advanced)",
                 "Font Sampling Point Size",
@@ -75,6 +77,12 @@ namespace JaggyFontFix
                 1.0f,
                 "Set font scale size."
             );
+            EnglishFontSizeScale = Config.Bind<float>(
+                "Font Settings(Advanced)",
+                "English Font Size Scale",
+                1.0f,
+                "Set vanilla English font (Bombardier) scale size."
+            );
         }
         #endregion
 
@@ -83,7 +91,7 @@ namespace JaggyFontFix
         {
             Init();
 
-            GenerateFontAsset();
+            SetFontAsset();
 
             SubcribeEvents();
         }
@@ -126,6 +134,9 @@ namespace JaggyFontFix
                 case UseFontName.Custom:
                     font = FontFromFile(CustomFontFileNameConfig.Value);
                     break;
+                case UseFontName.Bombardier:
+                    font = FontAssets.mainBundle.LoadAsset<Font>("Bombardier-Regular");
+                    break;
                 default:
                     font = FontAssets.mainBundle.LoadAsset<Font>("NotoSansCJKsc-Regular");
                     break;
@@ -140,7 +151,7 @@ namespace JaggyFontFix
 
             // Check if user add file extension or not.
             if (!fileName.Contains(".ttf") && !fileName.Contains(".otf"))
-            { 
+            {
                 if (IO.File.Exists(fontFilePath + ".ttf")) fontFilePath += ".ttf";
                 else if (IO.File.Exists(fontFilePath + ".otf")) fontFilePath += ".otf";
                 else
@@ -152,8 +163,8 @@ namespace JaggyFontFix
 
             if (!IO.File.Exists(fontFilePath))
             {
-                    Log.Warning("Custom font file not found! Is there any typo? Input name: " + fileName);
-                    return FontAssets.mainBundle.LoadAsset<Font>("NotoSansCJKsc-Regular");
+                Log.Warning("Custom font file not found! Is there any typo? Input name: " + fileName);
+                return FontAssets.mainBundle.LoadAsset<Font>("NotoSansCJKsc-Regular");
             }
 
             Font font = new Font(fontFilePath);
@@ -206,15 +217,15 @@ namespace JaggyFontFix
         }
         #endregion
 
-        private void GenerateFontAsset()
+        private TMP_FontAsset GenerateFontAsset(UseFontName fontName)
         {
-            fontAsset = null;
+            var _fontAsset = new TMP_FontAsset();
 
-            Font fontFile = LoadFont(UseFontNameConfig.Value);
+            Font fontFile = LoadFont(fontName);
             Log.Info(fontFile.name + " is loaded.");
 
             // Create font asset with multi atlas texture feature
-            fontAsset = TMP_FontAsset.CreateFontAsset(
+            _fontAsset = TMP_FontAsset.CreateFontAsset(
                 fontFile,
                 FontPointSize.Value,
                 9,
@@ -226,12 +237,12 @@ namespace JaggyFontFix
                 );
 
             // Set font size scale
-            var faceInfo = fontAsset.faceInfo;
-            faceInfo.scale = FontSizeScale.Value;
-            fontAsset.faceInfo = faceInfo;
+            var faceInfo = _fontAsset.faceInfo;
+            faceInfo.scale = (fontName == UseFontName.Bombardier) ? EnglishFontSizeScale.Value : FontSizeScale.Value;
+            _fontAsset.faceInfo = faceInfo;
 
             // Adding shadow to font asset to make font closer to original game
-            var mat = fontAsset.material;
+            var mat = _fontAsset.material;
 
             mat.SetColor("_GlowColor", new Color(1f, 1f, 1f, 0.28627452f));
             mat.SetFloat("_GlowInner", 0f);
@@ -247,12 +258,36 @@ namespace JaggyFontFix
             mat.SetFloat("_UnderlaySoftness", 0f);
             mat.EnableKeyword("UNDERLAY_ON");
 
-            fontAsset.material = mat;
+            _fontAsset.material = mat;
+
+            return _fontAsset;
+        }
+
+        private void SetFontAsset()
+        {
+            var customFontAsset = GenerateFontAsset(UseFontNameConfig.Value);
+
+            var fallbackTable = new List<TMP_FontAsset>();
+            if (KeepEnglishFont.Value)
+            {
+                var engFontAsset = GenerateFontAsset(UseFontName.Bombardier);
+
+                fallbackTable.Add(customFontAsset);
+                engFontAsset.fallbackFontAssetTable = fallbackTable;
+                customFontAsset = engFontAsset;
+
+                Log.Info($"Add font asset to english fallback.");
+            }
+
+            fallbackTable.Add(GenerateFontAsset(UseFontName.NotoSans));
+            customFontAsset.fallbackFontAssetTable = fallbackTable;
+            fontAsset = customFontAsset;
         }
     }
 
     public enum UseFontName
     {
+        Bombardier = -1,
         NotoSans = 0,
         TaipeiSans = 1,
         Cubic11 = 2,
