@@ -21,6 +21,9 @@ namespace JaggyFontFix
         public static ConfigEntry<bool> KeepEnglishFont { get; set; }
         public static ConfigEntry<UseFontName> UseFontNameConfig { get; set; }
         public static ConfigEntry<string> CustomFontFileNameConfig { get; set; }
+
+        public static ConfigEntry<int> FontPointSize { get; set; }
+        public static ConfigEntry<float> FontSizeScale { get; set; }
         #endregion
 
         private TMP_FontAsset fontAsset;
@@ -42,9 +45,8 @@ namespace JaggyFontFix
                 "Font Settings",
                 "Keep English Font",
                     false,
-                "Set original English game font (Bombardier) as primary font."
-            );
-
+                "Set vanilla English font (Bombardier) as primary font."
+                );
             UseFontNameConfig = Config.Bind<UseFontName>(
                 "Font Settings",
                 "Font Name",
@@ -59,6 +61,20 @@ namespace JaggyFontFix
                 "You NEED to put your font file under this plugin folder, path to font file is not supported.\n" +
                 "File extension is optional."
                 );
+
+            FontPointSize = Config.Bind<int>(
+                "Font Settings(Advanced)",
+                "Font Sampling Point Size",
+                90,
+                "The size that characters in font texture.\n" +
+                "Greater will be less jaggier, but might cause missing character and increase file size."
+            );
+            FontSizeScale = Config.Bind<float>(
+                "Font Settings(Advanced)",
+                "Font Size Scale",
+                1.0f,
+                "Set font scale size."
+            );
         }
         #endregion
 
@@ -98,7 +114,7 @@ namespace JaggyFontFix
         private Font LoadFont(UseFontName fontName)
         {
             Font font = null;
-            
+
             switch (fontName)
             {
                 case UseFontName.TaipeiSans:
@@ -200,7 +216,7 @@ namespace JaggyFontFix
             // Create font asset with multi atlas texture feature
             fontAsset = TMP_FontAsset.CreateFontAsset(
                 fontFile,
-                90,
+                FontPointSize.Value,
                 9,
                 UnityEngine.TextCore.LowLevel.GlyphRenderMode.SDFAA,
                 4096,
@@ -209,13 +225,28 @@ namespace JaggyFontFix
                 true
                 );
 
+            // Set font size scale
+            var faceInfo = fontAsset.faceInfo;
+            faceInfo.scale = FontSizeScale.Value;
+            fontAsset.faceInfo = faceInfo;
+
             // Adding shadow to font asset to make font closer to original game
             var mat = fontAsset.material;
-            mat.SetFloat("_UnderlayOffsetX", .3f);
-            mat.SetFloat("_UnderlayOffsetY", -.3f);
-            mat.SetFloat("_UnderlayDilate", .5f);
-            mat.SetFloat("_UnderlaySoftness", .1f);
+
+            mat.SetColor("_GlowColor", new Color(1f, 1f, 1f, 0.28627452f));
+            mat.SetFloat("_GlowInner", 0f);
+            mat.SetFloat("_GlowOffset", -.89f);
+            mat.SetFloat("_GlowOuter", 1f);
+            mat.SetFloat("_GlowPower", 0.186f);
+            mat.EnableKeyword("GLOW_ON");
+
+            mat.SetColor("_UnderlayColor", new Color(0f, 0f, 0f, 0.6627451f));
+            mat.SetFloat("_UnderlayOffsetX", 1f);
+            mat.SetFloat("_UnderlayOffsetY", -1f);
+            mat.SetFloat("_UnderlayDilate", 1f);
+            mat.SetFloat("_UnderlaySoftness", 0f);
             mat.EnableKeyword("UNDERLAY_ON");
+
             fontAsset.material = mat;
         }
     }
